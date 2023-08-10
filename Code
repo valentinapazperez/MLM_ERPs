@@ -1,0 +1,59 @@
+#------------------------------------------------------------------
+# DATA
+#------------------------------------------------------------------
+
+# data is a matrix of x rows and y columns
+# x has dimension number_of_trials*number_of_subjects
+# y include subject, self-outcome, other-outcome, group (Control, MD-SA), trial, and voltage.  
+# voltage is the ERP voltage value (MFN, P300, or LPP) for each trial for each subject 
+# (corresponding to the average over the time windows and electrodes of interest).
+
+setwd("C:/Users") #path
+data = read.csv("data.csv",sep = ",") #read csv file 
+
+#------------------------------------------------------------------
+# MIXED LINEAR MODELS
+#------------------------------------------------------------------
+
+# For all ERPs (MFN, P300, or LPP), the models included:
+# voltage as the response variable, 
+# subject as a random effect, 
+# and self-outcome, other-outcome, group (Control, MD-SA), trial, and all their interactions as fixed effects. 
+
+library(lmerTest)
+m1=lmer(voltage~self-outcome*other-outcome*group*trial+(1|subject),data=data) #fit model
+AIC(m1) # test model with the Akaike Information Criterion (AIC)
+summary(m1)
+
+#------------------------------------------------------------------
+# STATISTICAL TESTS
+#------------------------------------------------------------------
+
+anova(m1,type=3)
+
+#------------------------------------------------------------------
+# POST-HOCS
+#------------------------------------------------------------------
+
+library(emmeans)
+
+dataset.lme.lsm = emmeans(m1,"self-outcome")
+dataset.lme.lsm = emmeans(m1,"other-outcome")
+dataset.lme.lsm = emmeans(m1,"self-outcome",by="other-outcome")
+dataset.lme.lsm = emmeans(m1,"group",by=c("self-outcome","other-outcome"))
+
+comps = pairs(dataset.lme.lsm)
+summary(comps,by=NULL,adjust="holm")
+
+#-------- SLOPES --------
+
+m1=lmer(voltage~trial:self-outcome+self-outcome*other-outcome*group+(1|subject),data=data)
+m1=lmer(voltage~trial*self-outcome+self-outcome*other-outcome*group+(1|subject),data=data)
+
+m1=lmer(voltage~trial:other-outcome+self-outcome*other-outcome*group+(1|subject),data=data)
+m1=lmer(voltage~trial*other-outcome+self-outcome*other-outcome*group+(1|subject),data=data)
+
+m1=lmer(voltage~trial:group+self-outcome*other-outcome*group+(1|subject),data=data)
+m1=lmer(voltage~trial*group+self-outcome*other-outcome*group+(1|subject),data=data)
+
+summary(m1)
