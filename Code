@@ -47,6 +47,8 @@ summary(comps,by=NULL,adjust="holm")
 
 #-------- SLOPES --------
 
+m1=lmer(voltage~trial+self-outcome*other-outcome*group+(1|subject),data=data)
+
 m1=lmer(voltage~trial:self-outcome+self-outcome*other-outcome*group+(1|subject),data=data)
 m1=lmer(voltage~trial*self-outcome+self-outcome*other-outcome*group+(1|subject),data=data)
 
